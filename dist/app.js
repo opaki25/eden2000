@@ -12,8 +12,8 @@ const form=$('#booking-form'), dialog=$('#booking');
 let currentStep=1, requestMessage='';
 $('#year').textContent=new Date().getFullYear();
 rooms.forEach((room,i)=>{
-  const article=document.createElement('article'); article.className='room-item';
-  article.innerHTML=`<div><h3>${room.name}</h3><p>${room.detail}</p></div><div class="room-price">UGX ${money(room.rate)}<small>from / night</small><button class="text-link" data-room="${i}">Choose room</button></div>`;
+  const article=document.createElement('article'); article.className='room-item'; article.dataset.category=i<4?'rooms':'suites';
+  article.innerHTML=`<div><span class="room-number">0${i+1} / ${i<4?'GUEST ROOM':'MORE SPACE'}</span><h3>${room.name}</h3><p>${room.detail}</p></div><div class="room-price">UGX ${money(room.rate)}<small>from / night</small><button class="text-link" data-room="${i}" aria-label="Request ${room.name}">Select stay ↗</button></div>`;
   $('#room-list').append(article);
   const option=new Option(`${room.name} · UGX ${money(room.rate)}`,String(i));$('#room-select').add(option);
 });
@@ -40,7 +40,7 @@ function showStep(step){
   document.querySelectorAll('.step').forEach(el=>el.hidden=Number(el.dataset.step)!==step);
   document.querySelectorAll('.steps span').forEach((el,i)=>el.classList.toggle('active',i+1===step));
   $('#back').hidden=step===1;$('#next').hidden=step===3;$('#form-error').textContent='';
-  dialog.scrollTop=0;
+  dialog.scrollTop=0; if(dialog.open) dialog.querySelector(`[data-step="${step}"] input, [data-step="${step}"] select, [data-step="${step}"] a`)?.focus({preventScroll:true});
 }
 function openBooking({room,service}={}){
   form.elements.kind.value=service?'Wellness':'Stay';
@@ -86,9 +86,23 @@ const video=$('#hero-video'),videoButton=$('#video-toggle');
 video.addEventListener('play',()=>{videoButton.textContent='Pause film';videoButton.setAttribute('aria-label','Pause opening film');});
 video.addEventListener('pause',()=>{videoButton.textContent='Play film';videoButton.setAttribute('aria-label','Play opening film');});
 videoButton.addEventListener('click',()=>video.paused?video.play().catch(()=>{}):video.pause());
-if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&!navigator.connection?.saveData){video.autoplay=true;video.play().catch(()=>{});}
-document.querySelectorAll('[data-image]').forEach(button=>button.addEventListener('click',()=>{const img=$('#lightbox-image');img.src=`assets/${button.dataset.image}`;img.alt=button.dataset.caption;$('#lightbox-caption').textContent=button.dataset.caption;$('#lightbox').showModal();}));
+// The property photograph opens immediately; guests can play the film on demand.
+const photos=[...document.querySelectorAll('[data-image]')];let photoIndex=0;
+function showPhoto(index){photoIndex=(index+photos.length)%photos.length;const button=photos[photoIndex];$('#lightbox-image').src='assets/'+button.dataset.image;$('#lightbox-image').alt=button.dataset.caption;$('#lightbox-caption').textContent=button.dataset.caption;$('#photo-count').textContent=(photoIndex+1)+' / '+photos.length;}
+photos.forEach((button,i)=>button.addEventListener('click',()=>{showPhoto(i);$('#lightbox').showModal();}));
+$('#photo-prev').addEventListener('click',()=>showPhoto(photoIndex-1));$('#photo-next').addEventListener('click',()=>showPhoto(photoIndex+1));
+$('#lightbox').addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();showPhoto(photoIndex+1);}if(e.key==='ArrowLeft'){e.preventDefault();showPhoto(photoIndex-1);}});
 $('.menu').addEventListener('click',()=>{const open=$('nav').classList.toggle('open');$('.menu').setAttribute('aria-expanded',String(open));});
 document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',()=>{$('nav').classList.remove('open');$('.menu').setAttribute('aria-expanded','false');}));
 syncKind();
 if(document.modelContext?.registerTool){const lifecycle=new AbortController();const tools=[{name:'list_eden_rooms',description:'Read advertised Eden room types and starting nightly rates in UGX. Availability requires manager confirmation.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true},execute:()=>({rooms})},{name:'start_eden_visit_request',description:'Open the Eden booking form and select a room or wellness service. Does not submit or confirm a booking.',inputSchema:{type:'object',properties:{roomIndex:{type:'integer',minimum:0,maximum:5},service:{type:'string',enum:['Sauna & steam','Massage & body care','Gym & aerobics','Salon & beauty','Meals, salon or meeting space']}},additionalProperties:false},annotations:{readOnlyHint:false},execute:input=>{if(!input||typeof input!=='object'||Object.keys(input).some(k=>!['roomIndex','service'].includes(k)))throw new Error('Invalid request');if(input.roomIndex!==undefined&&(!Number.isInteger(input.roomIndex)||input.roomIndex<0||input.roomIndex>5))throw new Error('Invalid room');if(input.service!==undefined&&![...form.elements.service.options].some(o=>o.value===input.service))throw new Error('Invalid service');openBooking({room:input.roomIndex,service:input.service});return {status:'form_open',kind:form.elements.kind.value};}}];for(const tool of tools){try{Promise.resolve(document.modelContext.registerTool(tool,{signal:lifecycle.signal})).catch(()=>{});}catch{}}window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});}
+
+// Small, progressive enhancements; core content remains visible without motion.
+const quick=$('#quick-stay');quick.elements.arrival.min=today;quick.elements.arrival.value=today;quick.elements.departure.value=localDate(tomorrow);quick.elements.departure.min=localDate(tomorrow);
+quick.elements.arrival.addEventListener('change',()=>{const d=new Date(quick.elements.arrival.value+'T12:00:00');if(Number.isNaN(d.getTime()))return;d.setDate(d.getDate()+1);const min=localDate(d);quick.elements.departure.min=min;if(quick.elements.departure.value<min)quick.elements.departure.value=min;});
+quick.addEventListener('submit',e=>{e.preventDefault();if(!quick.reportValidity())return;form.elements.checkin.value=quick.elements.arrival.value;form.elements.checkout.value=quick.elements.departure.value;form.elements.guests.value=quick.elements.party.value;openBooking();});
+form.elements.checkin.addEventListener('change',()=>{if(form.elements.checkout.value<=form.elements.checkin.value){const d=new Date(form.elements.checkin.value+'T12:00:00');d.setDate(d.getDate()+1);form.elements.checkout.value=localDate(d);estimate();}});
+document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));document.querySelectorAll('.room-item').forEach(item=>item.hidden=button.dataset.filter!=='all'&&item.dataset.category!==button.dataset.filter);}));
+const sectionObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){document.querySelectorAll('nav a').forEach(link=>{const active=link.hash==='#'+entry.target.id;link.classList.toggle('current',active);if(active)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});}}),{rootMargin:'-15% 0px -55% 0px'});document.querySelectorAll('main>section[id]').forEach(section=>sectionObserver.observe(section));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('nav').classList.remove('open');$('.menu').setAttribute('aria-expanded','false');}});
+document.querySelectorAll('dialog').forEach(d=>{d.addEventListener('close',()=>{document.body.classList.remove('dialog-open');});new MutationObserver(()=>document.body.classList.toggle('dialog-open',!!document.querySelector('dialog[open]'))).observe(d,{attributes:true,attributeFilter:['open']});});
