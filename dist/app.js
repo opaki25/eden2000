@@ -82,11 +82,6 @@ $('#next').addEventListener('click',()=>{
 });
 $('#back').addEventListener('click',()=>showStep(currentStep-1));
 $('#copy-message').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(requestMessage);$('#copy-status').textContent='Request copied. Paste it into your chat with Eden.';}catch{$('#copy-status').textContent='Select and copy the request above, then paste it into WhatsApp.';}});
-const video=$('#hero-video'),videoButton=$('#video-toggle');
-video.addEventListener('play',()=>{videoButton.textContent='Pause film';videoButton.setAttribute('aria-label','Pause opening film');});
-video.addEventListener('pause',()=>{videoButton.textContent='Play film';videoButton.setAttribute('aria-label','Play opening film');});
-videoButton.addEventListener('click',()=>video.paused?video.play().catch(()=>{}):video.pause());
-// The property photograph opens immediately; guests can play the film on demand.
 const photos=[...document.querySelectorAll('[data-image]')];let photoIndex=0;
 function showPhoto(index){photoIndex=(index+photos.length)%photos.length;const button=photos[photoIndex];$('#lightbox-image').src='assets/'+button.dataset.image;$('#lightbox-image').alt=button.dataset.caption;$('#lightbox-caption').textContent=button.dataset.caption;$('#photo-count').textContent=(photoIndex+1)+' / '+photos.length;}
 photos.forEach((button,i)=>button.addEventListener('click',()=>{showPhoto(i);$('#lightbox').showModal();}));
