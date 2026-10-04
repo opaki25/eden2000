@@ -13,3 +13,5 @@
 @media(max-width:700px){.hero-photo{object-position:60% center}.gallery{gap:14px}.gallery button{height:245px}.gallery span{font-size:21px;padding:40px 13px 15px;gap:7px}.gallery span small{font-size:8px}.gallery-note{font-size:10px;line-height:1.8}}
 
 .social-icon{display:grid;place-items:center;width:44px;height:44px;border:1px solid #d4b78160;border-radius:50%;color:var(--gold)}.social-icon svg{width:20px;height:20px}.location-map{grid-column:1/-1;border:1px solid #d4cec1}.location-map iframe{display:block;border:0;width:100%;height:410px;background:#e9e4d9}.map-caption{display:flex;justify-content:space-between;align-items:center;gap:20px;background:#e9e4d9;padding:20px 25px;font-size:10px;letter-spacing:1px}.map-caption a{font-size:12px;letter-spacing:0;border-bottom:1px solid #8d7954;padding-bottom:3px}@media(max-width:700px){.location-map iframe{height:320px}.map-caption{padding:17px;font-size:8px;gap:12px}.map-caption a{font-size:10px;white-space:nowrap}}
+
+footer .socials{flex-direction:row;gap:12px;flex-wrap:wrap}a.social-icon:hover{background:var(--gold);color:var(--ink)}
