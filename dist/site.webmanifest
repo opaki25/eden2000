@@ -1,0 +1,16 @@
+{
+  "name": "Eden King & Queen Guest House & Spa",
+  "short_name": "Eden",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#171a17",
+  "theme_color": "#171a17",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

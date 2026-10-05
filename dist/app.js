@@ -11,6 +11,7 @@ const $=s=>document.querySelector(s);
 const form=$('#booking-form'), dialog=$('#booking');
 let currentStep=1, requestMessage='';
 $('#year').textContent=new Date().getFullYear();
+$('#room-list').replaceChildren();
 rooms.forEach((room,i)=>{
   const article=document.createElement('article'); article.className='room-item'; article.dataset.category=i<4?'rooms':'suites';
   article.innerHTML=`<div><span class="room-number">0${i+1} / ${i<4?'GUEST ROOM':'MORE SPACE'}</span><h3>${room.name}</h3><p>${room.detail}</p></div><div class="room-price">UGX ${money(room.rate)}<small>from / night</small><button class="text-link" data-room="${i}" aria-label="Request ${room.name}">Select stay ↗</button></div>`;
